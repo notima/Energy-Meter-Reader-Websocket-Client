@@ -1,0 +1,19 @@
+{
+  "name": "@emr/websocket-client",
+  "version": "1.0.0",
+  "description": "A websocket client for connecting to and interfacing with energy meter reading devices from Notima Energy Intelligence",
+  "main": "dist/emrclient.js",
+  "types": "dist/emrclient.d.ts",
+  "files": [
+    "/dist",
+    "README.MD"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "EnergyIntelligence"
+  ],
+  "author": "Oliver Norin",
+  "license": "ISC"
+}
