@@ -1,4 +1,4 @@
-import { EMRWebsocketClientManager } from "../../energy-meter-reader-websocket-client-abstract/dist/emrClientManager";
+import { EMRWebsocketClientManager } from "energy-meter-reader-websocket-client";
 
 export let emrBrowserWebsocketClientSingleton: EMRBrowserWebsocketClient;
 

@@ -1,6 +1,6 @@
 {
   "name": "energy-meter-reader-websocket-client-node",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A websocket client implementation for connecting to and interfacing with energy meter reading devices from Notima Energy Intelligence",
   "main": "dist/emrNodeClientManager.js",
   "types": "dist/emrNodeClientManager.d.ts",
