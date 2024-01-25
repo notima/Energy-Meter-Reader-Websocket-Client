@@ -1,0 +1,25 @@
+{
+  "name": "energy-meter-reader-websocket-client-node",
+  "version": "1.0.0",
+  "description": "A websocket client implementation for connecting to and interfacing with energy meter reading devices from Notima Energy Intelligence",
+  "main": "dist/emrNodeClientManager.js",
+  "types": "dist/emrNodeClientManager.d.ts",
+  "files": [
+    "/dist",
+    "README.MD"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "EnergyIntelligence"
+  ],
+  "repository": "https://github.com/notima/Energy-Meter-Reader-Websocket-Client",
+  "author": "Oliver Norin",
+  "license": "ISC",
+  "dependencies": {
+    "@types/websocket": "^1.0.10",
+    "energy-meter-reader-websocket-client": "^1.1.0",
+    "websocket": "^1.0.34"
+  }
+}

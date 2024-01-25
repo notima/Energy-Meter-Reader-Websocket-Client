@@ -14,6 +14,7 @@
   "keywords": [
     "EnergyIntelligence"
   ],
+  "repository": "https://github.com/notima/Energy-Meter-Reader-Websocket-Client",
   "author": "Oliver Norin",
   "license": "ISC"
 }
