@@ -86,7 +86,7 @@ export abstract class EMRWebsocketClientManager {
     }
 
     public send(data: any): void {
-        if(this.isConnectionOpen)
+        if(this.isConnectionOpen())
             this.sendMessage(JSON.stringify(data));
     }
 
