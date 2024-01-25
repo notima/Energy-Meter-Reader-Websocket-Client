@@ -123,3 +123,5 @@ export abstract class EMRWebsocketClientManager {
     protected abstract sendMessage(data: string): void;
 
 }
+
+export { EMRDataPoint, EMRStatus };
