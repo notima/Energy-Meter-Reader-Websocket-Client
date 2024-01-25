@@ -1,9 +1,3 @@
----
-runme:
-  id: 01HN0EKPBFP0RGK9VPC0T2WW2D
-  version: v2.2
----
-
 # Energy Meter Reader Websocket client
 
 This repository contains the following projects:
