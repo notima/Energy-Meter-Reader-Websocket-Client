@@ -116,11 +116,11 @@ export abstract class EMRWebsocketClientManager {
         });
     }
 
-    protected abstract isConnectionOpen(): boolean;
-    protected abstract isConnectionClosed(): boolean;
-    protected abstract openConnection(address: string): void;
-    protected abstract closeConnection(): void;
-    protected abstract sendMessage(data: string): void;
+    public abstract isConnectionOpen(): boolean;
+    public abstract isConnectionClosed(): boolean;
+    public abstract openConnection(address: string): void;
+    public abstract closeConnection(): void;
+    public abstract sendMessage(data: string): void;
 
 }
 
