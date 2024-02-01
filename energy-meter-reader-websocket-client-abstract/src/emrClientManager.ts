@@ -57,7 +57,7 @@ export abstract class EMRWebsocketClientManager {
     /**
      * Timestamp of last received message from server
      */
-    private lastMessage: number;
+    protected lastMessage: number;
 
     // Websocket callback functions
     private onOpen: {():void};
