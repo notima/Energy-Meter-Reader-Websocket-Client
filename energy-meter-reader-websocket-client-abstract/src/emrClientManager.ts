@@ -52,7 +52,7 @@ export abstract class EMRWebsocketClientManager {
     protected subscribers: Subscriber[] = [];
     protected address: string;
     protected config: ConnectionConfig = {} as ConnectionConfig;
-    protected gracePeriod: number = 5000;
+    protected reconnectTimer: number = 5000;
 
     /**
      * Timestamp of last received message from server
@@ -63,7 +63,7 @@ export abstract class EMRWebsocketClientManager {
     private onOpen: {():void};
     private onClose: {():void};
 
-    private keepAliveIntervalId: number;
+    private reconnetIntervalId: number;
     private stopped: boolean = false;
 
     /**
@@ -77,6 +77,7 @@ export abstract class EMRWebsocketClientManager {
         this.onOpen = onOpen;
         this.onClose = onClose;
         this.openConnection(address);
+        this.startReconnectTimer();
     }
 
     /**
@@ -84,7 +85,7 @@ export abstract class EMRWebsocketClientManager {
      */
     public stop() {
         this.stopped = true;
-        clearInterval(this.keepAliveIntervalId);
+        clearInterval(this.reconnetIntervalId);
         this.closeConnection();
         this.subscribers = [];
         this.onOpen = ()=>{};
@@ -141,7 +142,7 @@ export abstract class EMRWebsocketClientManager {
      * Create a subscriber.
      * The subscriber callback function will be called when the corresponding key is present in a
      * websocket message (in json format).
-     * It is recommended to use one of the helper function: `addStatusHandler`, `addDataHandler` or `addLogHandler`
+     * It is recommended to use one of the helper functions: `addStatusHandler`, `addDataHandler` or `addLogHandler`
      * instead of calling this function directly.
      * @param key The key that is subscribed to.
      * @param callback The callback to be triggered. The `data` parameter is the value of the key.
@@ -154,7 +155,7 @@ export abstract class EMRWebsocketClientManager {
     }
 
     /**
-     * Send data to the server. The object passed will JSON stringified and sent as a string.
+     * Send data to the server. The object passed will be JSON stringified and sent as a string.
      * @param data The data to send to the server
      */
     public send(data: any): void {
@@ -163,14 +164,13 @@ export abstract class EMRWebsocketClientManager {
     }
 
     /**
-     * Set the graceperiod duration
-     * @param gracePeriod The time in milliseconds to wait until closing the connection if the
-     * server stops responding to ping packets.
+     * Set the reconnect interval duration
+     * @param time The interval time in milliseconds for the reconnect timer.
      */
-    public setGracePeriod(gracePeriod: number) {
-        this.gracePeriod = gracePeriod;
-        clearInterval(this.keepAliveIntervalId);
-        this.startKeepAliveInterval();
+    public setReconnectTimer(time: number) {
+        this.reconnectTimer = time;
+        clearInterval(this.reconnetIntervalId);
+        this.startReconnectTimer();
     }
 
     /**
@@ -179,7 +179,6 @@ export abstract class EMRWebsocketClientManager {
     protected onConnectionOpen() {
         this.syncConnectionConfig();
         this.lastMessage = Date.now();
-        this.startKeepAliveInterval();
         this.onOpen();
     }
 
@@ -187,7 +186,6 @@ export abstract class EMRWebsocketClientManager {
      * Must be called by the websocket implementation's close callback
      */
     protected onConnectionClose() {
-        clearInterval(this.keepAliveIntervalId);
         this.onClose();
         if(!this.stopped)
             this.openConnection(this.address);
@@ -213,25 +211,14 @@ export abstract class EMRWebsocketClientManager {
      * In order for this to work, each implementation needs to reset the this#lastMessage
      * variable to Date#now whenever a pong packet is received.
      */
-    private startKeepAliveInterval(): void {
-        this.keepAliveIntervalId = setInterval(()=>{
-            if(this.isConnectionOpen() && this.lastMessage + this.gracePeriod < Date.now()) {
-                console.log("Websocket timeout");
-                this.closeConnection();
-                this.openConnection(this.address);
-            }
-            else if(this.isConnectionClosed()) {
+    private startReconnectTimer(): void {
+        this.reconnetIntervalId = setInterval(()=>{
+            if(this.isConnectionClosed()) {
                 console.log("Attempting reconnect...");
                 this.openConnection(this.address);
             }
-            this.ping();
-        },this.gracePeriod / 2);
+        },this.reconnectTimer);
     }
-
-    /**
-     * Send a ping frame to the server
-     */
-    protected abstract ping(): void;
 
     /**
      * @return true if there is an open websocket connection
@@ -259,7 +246,7 @@ export abstract class EMRWebsocketClientManager {
      * Send a message to the server
      * @param data the data to be sent.
      */
-    public abstract sendMessage(data: string): void;
+    protected abstract sendMessage(data: string): void;
 
 }
 
