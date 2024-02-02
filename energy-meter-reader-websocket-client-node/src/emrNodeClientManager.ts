@@ -2,18 +2,22 @@ import { EMRWebsocketClientManager } from "energy-meter-reader-websocket-client"
 import { w3cwebsocket } from "websocket";
 
 export class EMRNodeWebsocketClient extends EMRWebsocketClientManager {
+    
     private ws: w3cwebsocket;
 
-    protected isConnectionOpen(): boolean {
-        return this.ws.readyState == WebSocket.OPEN;
+    public isConnectionOpen(): boolean {
+        return this.ws && this.ws.readyState == w3cwebsocket.OPEN;
     }
 
-    protected isConnectionClosed(): boolean {
-        return this.ws.readyState == WebSocket.CLOSED;
+    public isConnectionClosed(): boolean {
+        return this.ws == null || this.ws.readyState == w3cwebsocket.CLOSED;
     }
 
-    protected openConnection(address: string): void {
-        this.ws = new w3cwebsocket(this.address);
+    public openConnection(address: string): void {
+        if(!this.isConnectionClosed) {
+            return;
+        }
+        this.ws = new w3cwebsocket(address, undefined, undefined, undefined, undefined, {closeTimeout: 500, keepalive: true, dropConnectionOnKeepaliveTimeout: true, keepaliveGracePeriod : 1000, keepaliveInterval: 3000} as any);
 
         this.ws.onopen = () => {
             this.onConnectionOpen();
@@ -28,7 +32,7 @@ export class EMRNodeWebsocketClient extends EMRWebsocketClientManager {
         }
     }
 
-    protected closeConnection(): void {
+    public closeConnection(): void {
         this.ws.close();
     }
     
