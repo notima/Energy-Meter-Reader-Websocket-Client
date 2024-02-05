@@ -4,13 +4,19 @@ An abstract websocket client manager for interfacing with Energy Meter Reader de
 
 The npm packages `energy-meter-reader-websocket-client-browser` and `energy-meter-reader-websocket-client-node` contain two different implementations.
 
-## How the client works
+The purpose of the client manager class is to:
+ - create a websocket connection to an electricity meter reader
+ - keep the connection alive
+ - notify suscribers of any updates
+ - reconnect if the connection is lost
+
+## How the client manager works
 
 A client is created simply by calling the constructor for `EMRWebsocketClientManager`. The client will connect automatically to the address passed to the constructor and will attempt to reconnect if the connection is lost. You can then create callback functions to be executed when certain messages are recieved on the websocket connection. All messages are JSON formatted so when registering a callback, you need to pass a JSON key to subscribe to. The callback will then be executed when the key is present with the value as argument.
 
 Before any messages are sent from the server, the client needs to tell the server what messages to send this can be done as the following example suggests:
 
-```typescript {"id":"01HN0EKPBFP0RGK9VPBC5936KB"}
+```typescript
 client.send({
     connection: {
         statusUpdate: true|false,
@@ -24,7 +30,7 @@ The helper functions `addStatusHandler`, `addDataHandler`, and `addLogHandler` e
 
 ## Example usage
 
-```typescript {"id":"01HN0EKPBFP0RGK9VPBD9BECHK"}
+```typescript
 this.wsClient = new EMRWebsocketClientManager(address, (ev: Event) => {
     console.log("Websocket connection opened");
 }, (ev: Event) => {
@@ -44,15 +50,17 @@ the following sections explains the functions of the client class more in depth.
 
 ### constructor
 
+Create a client manager and connect to the websocket server
+
 Parameters:
 
-- `address: string` - The address of the websocket server (the energy meter reader device).
+- `address: string` - The address of the websocket server (the energy meter reader device. e.g. `ws://address:port`).
 - `onOpen: (ev: Event): void` - The callback that is executed when a connection is opened.
 - `onClose: (ev: Event): void;` - The callback that is executed when a connection is closed.
 
 Example:
 
-```typescript {"id":"01HN0EKPBFP0RGK9VPBH119DVD"}
+```typescript
 client = new EMRWebsocketClientManager("ws://192.168.4.1/ws", (ev: Event) => {
     console.log("Websocket connection opened");
 }, (ev: Event) => {
@@ -60,9 +68,17 @@ client = new EMRWebsocketClientManager("ws://192.168.4.1/ws", (ev: Event) => {
 });
 ```
 
+### stop
+
+Kills the client manager by closing the connection without attempting to reopen. 
+
 ### subscribe
 
-This function subscribes to a json key in messages received from the server.
+Create a subscriber.
+The subscriber callback function will be called when the corresponding key is present in a
+websocket message (in json format).
+
+***It is recommended to use one of the helper functions: `addStatusHandler`, `addDataHandler` or `addLogHandler` instead of calling this function directly.***
 
 Parameters:
 
@@ -71,7 +87,7 @@ Parameters:
 
 Example:
 
-```typescript {"id":"01HN0EKPBFP0RGK9VPBHQYPYK3"}
+```typescript
 client.subscribe("data", (data) => {
     console.log("Data received")
 });
@@ -79,7 +95,9 @@ client.subscribe("data", (data) => {
 
 ### send
 
-This function sends a message to the server. ***It is recommended to use one of the helper functions instead of calling this function to request updates.***
+This function sends a message to the server. The object passed will be JSON stringified and transmitted as a string. 
+
+***It is recommended to use one of the helper functions: `addStatusHandler`, `addDataHandler` or `addLogHandler` instead of calling this function directly.***
 
 Parameters:
 
@@ -87,7 +105,7 @@ Parameters:
 
 Example:
 
-```typescript {"id":"01HN0EKPBFP0RGK9VPBN767SEA"}
+```typescript
 client.send({
     connection: {
         statusUpdate: true
@@ -105,7 +123,7 @@ Parameters:
 
 Example:
 
-```typescript {"id":"01HN0EKPBFP0RGK9VPBS65N444"}
+```typescript
 client.addStatusHandler((status) => {
     console.log(`Status update received`)
 });
@@ -121,7 +139,7 @@ Parameters:
 
 Example:
 
-```typescript {"id":"01HN0EKPBFP0RGK9VPBVB7999H"}
+```typescript
 client.addStatusHandler((data) => {
     console.log(`New energy meter readings received`)
 });
@@ -137,7 +155,7 @@ Parameters:
 
 Example:
 
-```typescript {"id":"01HN0EKPBFP0RGK9VPBYDZ8VRA"}
+```typescript
 client.addLogHandler((log) => {
     console.log(`System log: ${log}`)
 });
@@ -159,11 +177,13 @@ export class EMRWebsocketClientManagerImpl extends EMRWebsocketClientManagerMana
     }
 
     protected openConnection(address: string): void {
-        // open a connection to `address` and setup callbacks
-        // the following functions must be called by the websocket engine:
+        // Open a connection to `address` and setup callbacks.
+        // The following functions must be called by the websocket engine:
         // `this.onConnectionOpen()` - when the connection is opened
         // `this.onConnectionClose()` - when the connection is closed
         // `this.onConnectionMessage(data: string)` - when a message is received on the connection
+        // There should also be a mechanism for pinging the server to ensure a stable connection
+        // Close the connection if no pong frames are returned.
     }
 
     protected closeConnection(): void {
@@ -171,7 +191,22 @@ export class EMRWebsocketClientManagerImpl extends EMRWebsocketClientManagerMana
     }
     
     protected sendMessage(data: string): void {
-        // send data on the connection. There is no need to check if the connection is open. This has already been done at this point.
+        // send data on the connection. 
+        // There is no need to check if the connection is open. This has already been done at this point.
     }
 }
 ```
+
+## Implementations:
+
+### energy-meter-reader-websocket-client-browser
+
+[Github](https://github.com/notima/Energy-Meter-Reader-Websocket-Client/tree/master/energy-meter-reader-websocket-client-node) | [NPM](https://www.npmjs.com/package/energy-meter-reader-websocket-client-browser)
+
+This is an implementation that uses the built in browser api for websockets. It is lightweight and contain no other dependencies than the abstract package
+
+### energy-meter-reader-websocket-client-node
+
+[Github](https://github.com/notima/Energy-Meter-Reader-Websocket-Client/tree/master/energy-meter-reader-websocket-client-browser) | [NPM](https://www.npmjs.com/package/energy-meter-reader-websocket-client-node)
+
+This implementation can be used for Node.js applications and uses the w3cwebsocket api.
