@@ -21,7 +21,7 @@ export class EMRBrowserWebsocketClient extends EMRWebsocketClientManager {
     }
 
     public openConnection(address: string): void {
-        this.ws = new WebSocket(this.address);
+        this.ws = new WebSocket(address);
 
         this.ws.onopen = (ev) => {
             this.startPingInterval();
@@ -29,7 +29,6 @@ export class EMRBrowserWebsocketClient extends EMRWebsocketClientManager {
         }
 
         this.ws.onclose = (ev) => {
-            clearInterval(this.pingIntervalId);
             this.onConnectionClose();
         }
 
@@ -45,18 +44,27 @@ export class EMRBrowserWebsocketClient extends EMRWebsocketClientManager {
     public closeConnection(): void {
         this.ws.close();
     }
+
+    private terminateConnection(): void {
+        this.closeConnection();
+        this.ws.onclose = this.ws.onerror = this.ws.onmessage = null;
+        this.onConnectionClose();
+    }
     
     public sendMessage(data: string): void {
         this.ws.send(data);
     }
 
     private startPingInterval() {
+        clearInterval(this.pingIntervalId);
         this.pingIntervalId = setInterval(() => {
-            this.ws.send("ping");
-            this.gracePeriodTimeoutId = setTimeout(() => {
-                console.log("Websocket timeout");
-                this.closeConnection();
-            }, 1000);
+            if(this.ws.readyState == this.ws.OPEN) {
+                this.ws.send("ping");
+                this.gracePeriodTimeoutId = setTimeout(() => {
+                    console.log("Websocket timeout");
+                    this.terminateConnection();
+                }, 1000);
+            }
         }, 3000);
     }
 }
